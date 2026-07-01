@@ -8,17 +8,14 @@ import TableOfContents from '../../components/code/TableOfContents'
 import NewsletterBanner from '../../components/blog/NewsletterBanner'
 import SeriesBanner from '../../components/series/SeriesBanner'
 import PostCard from '../../components/blog/PostCard'
+import NativeBanner from '../../components/ads/NativeBanner'
+import Banner300x250 from '../../components/ads/Banner300x250'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
-// Strip the post title if it was accidentally included as the first heading
-// in the content (happens when autoFormat promotes the title line to H2).
-// Also strips orphaned image-caption-style paragraphs like "AI Brain Network"
-// that appear right after an <img> tag with no real sentence content.
 function cleanPostContent(html, postTitle) {
   if (!html) return html
 
-  // 1. Remove leading H1/H2 that exactly matches the post title
   const titleEscaped = postTitle?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') || ''
   if (titleEscaped) {
     html = html.replace(
@@ -27,9 +24,6 @@ function cleanPostContent(html, postTitle) {
     )
   }
 
-  // 2. Mark short standalone paragraphs that look like image captions
-  // (3 words or fewer, no punctuation, appears after an img or before a heading)
-  // by adding a data-caption attribute so CSS can style them differently.
   html = html.replace(
     /(<img[^>]*>)\s*(<p(?:[^>]*)>)([^<]{1,40})(<\/p>)/g,
     (match, img, pOpen, text, pClose) => {
@@ -44,6 +38,21 @@ function cleanPostContent(html, postTitle) {
 
   return html
 }
+
+// Split HTML content at roughly the Nth paragraph for mid-article ad insertion
+function splitContentAtParagraph(html, n = 3) {
+  if (!html) return { before: '', after: '' }
+  const parts = html.split(/(?<=<\/p>|<\/h[2-4]>|<\/ul>|<\/ol>)/)
+  if (parts.length <= n) return { before: html, after: '' }
+  return {
+    before: parts.slice(0, n).join(''),
+    after: parts.slice(n).join('')
+  }
+}
+
+const AdLabel = () => (
+  <p className="text-xs text-text-muted text-right mb-1">Sponsored</p>
+)
 
 export default function PostPage() {
   const { slug } = useParams()
@@ -130,6 +139,8 @@ export default function PostPage() {
   )
 
   const cleanedContent = cleanPostContent(post.content, post.title)
+  // Split after 3rd block for mid-article ad
+  const { before: contentBefore, after: contentAfter } = splitContentAtParagraph(cleanedContent, 3)
 
   return (
     <PublicLayout>
@@ -168,11 +179,10 @@ export default function PostPage() {
               <span className="text-text-main line-clamp-1">{post.title}</span>
             </nav>
 
-            {/* Category badge + AI badge */}
+            {/* Badges */}
             <div className="flex items-center gap-2 mb-4 flex-wrap">
               {post.category && (
-                <Link
-                  to={`/category/${post.category.slug}`}
+                <Link to={`/category/${post.category.slug}`}
                   className="text-xs font-medium px-3 py-1 rounded-full transition-colors"
                   style={{ backgroundColor: `${post.category.color}20`, color: post.category.color }}>
                   {post.category.name}
@@ -186,12 +196,12 @@ export default function PostPage() {
               )}
             </div>
 
-            {/* Title — only shown here, NOT in the content body */}
+            {/* Title */}
             <h1 className="font-display font-bold text-3xl md:text-4xl text-text-main leading-tight mb-5">
               {post.title}
             </h1>
 
-            {/* Meta row */}
+            {/* Meta */}
             <div className="flex flex-wrap items-center gap-3 mb-8 pb-6 border-b border-border-dark text-sm text-text-muted">
               <div className="flex items-center gap-2">
                 {post.author?.avatar ? (
@@ -213,11 +223,10 @@ export default function PostPage() {
 
             {/* Thumbnail */}
             {post.thumbnail && (
-              <img
-                src={post.thumbnail}
-                alt={post.title}
+              <img src={post.thumbnail} alt={post.title}
                 className="w-full rounded-2xl mb-8 object-cover"
                 style={{ maxHeight: '420px' }}
+                loading="lazy"
               />
             )}
 
@@ -226,11 +235,28 @@ export default function PostPage() {
               <SeriesBanner series={post.series} posts={seriesPosts} currentPostId={post._id} />
             )}
 
-            {/* Article body */}
-            <div
-              className="prose-dark"
-              dangerouslySetInnerHTML={{ __html: cleanedContent }}
-            />
+            {/* ── Article content — BEFORE mid-article ad ── */}
+            {contentBefore && (
+              <div className="prose-dark" dangerouslySetInnerHTML={{ __html: contentBefore }} />
+            )}
+
+            {/* ── Mid-article Ad — Native Banner after intro paragraphs ── */}
+            {contentAfter && (
+              <div className="my-8 rounded-xl overflow-hidden border border-border-dark/30">
+                <AdLabel />
+                <NativeBanner />
+              </div>
+            )}
+
+            {/* ── Article content — AFTER mid-article ad ── */}
+            {contentAfter && (
+              <div className="prose-dark" dangerouslySetInnerHTML={{ __html: contentAfter }} />
+            )}
+
+            {/* If content wasn't split (short post), render it all */}
+            {!contentAfter && (
+              <div className="prose-dark" dangerouslySetInnerHTML={{ __html: cleanedContent }} />
+            )}
 
             {/* Share */}
             <div className="flex items-center gap-3 mt-10 pt-6 border-t border-border-dark">
@@ -274,8 +300,14 @@ export default function PostPage() {
               </section>
             )}
 
+            {/* ── Pre-comments Banner Ad ── */}
+            <div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
+              <AdLabel />
+              <NativeBanner />
+            </div>
+
             {/* Comments */}
-            <section className="mt-12">
+            <section className="mt-8">
               <h3 className="font-display font-bold text-text-main text-xl mb-6">
                 💬 Comments ({comments.length})
               </h3>
@@ -325,14 +357,21 @@ export default function PostPage() {
             </section>
           </article>
 
-          {/* Sticky sidebar — TOC */}
-          {post.tableOfContents?.length > 0 && (
-            <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-              <div className="sticky top-24">
+          {/* Sticky sidebar — TOC + Banner ad */}
+          <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
+            <div className="sticky top-24 space-y-6">
+              {/* TOC */}
+              {post.tableOfContents?.length > 0 && (
                 <TableOfContents items={post.tableOfContents} />
+              )}
+
+              {/* ── Sidebar Banner 300x250 Ad ── */}
+              <div className="bg-surface border border-border-dark rounded-xl overflow-hidden">
+                <AdLabel />
+                <Banner300x250 />
               </div>
-            </aside>
-          )}
+            </div>
+          </aside>
         </div>
       </div>
     </PublicLayout>

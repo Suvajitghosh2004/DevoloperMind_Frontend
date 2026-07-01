@@ -4,6 +4,8 @@ import PublicLayout from '../../components/layout/PublicLayout'
 import SEOHead from '../../components/ui/SEOHead'
 import PostCard from '../../components/blog/PostCard'
 import NewsletterBanner from '../../components/blog/NewsletterBanner'
+import NativeBanner from '../../components/ads/NativeBanner'
+import Banner300x250 from '../../components/ads/Banner300x250'
 import api from '../../lib/api'
 
 const CATEGORIES = [
@@ -39,10 +41,7 @@ export default function HomePage() {
     const params = { page, limit: 12 }
     if (activeCategory) params.category = activeCategory
     api.get('/posts', { params })
-      .then(r => {
-        setPosts(r.data.posts)
-        setTotalPages(r.data.pages)
-      })
+      .then(r => { setPosts(r.data.posts); setTotalPages(r.data.pages) })
       .finally(() => setLoading(false))
   }, [activeCategory, page])
 
@@ -65,7 +64,7 @@ export default function HomePage() {
 
         {/* Trending */}
         {trending.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-8">
             <div className="flex items-center gap-3 mb-5">
               <span className="w-1 h-6 bg-gradient-to-b from-accent to-highlight rounded-full" />
               <h2 className="font-display font-bold text-text-main text-lg">🔥 What's Hot in AI This Week</h2>
@@ -90,22 +89,25 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* ── Native Banner Ad — below trending, above post grid ── */}
+        <div className="mb-8 rounded-xl overflow-hidden border border-border-dark/30">
+          <p className="text-xs text-text-muted text-right px-2 pt-1 pb-0">Sponsored</p>
+          <NativeBanner />
+        </div>
+
         {/* Main content + Sidebar */}
         <div className="flex flex-col lg:flex-row gap-10">
-          {/* Main */}
+          {/* Main posts */}
           <div className="flex-1 min-w-0">
             {/* Category filter */}
             <div className="flex items-center gap-2 flex-wrap mb-6">
               {CATEGORIES.map(cat => (
-                <button
-                  key={cat.slug}
-                  onClick={() => handleCategory(cat.slug)}
+                <button key={cat.slug} onClick={() => handleCategory(cat.slug)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                     activeCategory === cat.slug
                       ? 'bg-accent text-white'
                       : 'bg-surface text-text-muted hover:text-text-main border border-border-dark'
-                  }`}
-                >
+                  }`}>
                   {cat.name}
                 </button>
               ))}
@@ -124,9 +126,27 @@ export default function HomePage() {
                 <p>No posts found in this category yet.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {posts.map(post => <PostCard key={post._id} post={post} />)}
-              </div>
+              <>
+                {/* First 4 posts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {posts.slice(0, 4).map(post => <PostCard key={post._id} post={post} />)}
+                </div>
+
+                {/* ── Native Banner between post rows ── */}
+                {posts.length > 4 && (
+                  <div className="mb-6 rounded-xl overflow-hidden border border-border-dark/30">
+                    <p className="text-xs text-text-muted text-right px-2 pt-1 pb-0">Sponsored</p>
+                    <NativeBanner />
+                  </div>
+                )}
+
+                {/* Remaining posts */}
+                {posts.length > 4 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {posts.slice(4).map(post => <PostCard key={post._id} post={post} />)}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Pagination */}
@@ -151,15 +171,21 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-accent/10 to-highlight/5 border border-accent/20 rounded-xl p-5">
               <h3 className="font-display font-bold text-text-main mb-2">📨 Weekly AI Digest</h3>
               <p className="text-text-muted text-sm mb-4">Every Tuesday — the AI & tech stories that matter.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = document.getElementById('newsletter')
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }}
-                  className="block w-full text-center py-2 bg-accent hover:bg-accent/80 text-white rounded-lg text-sm font-medium transition-colors">
-                  Subscribe Free →
-                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('newsletter')
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                className="block w-full text-center py-2 bg-accent hover:bg-accent/80 text-white rounded-lg text-sm font-medium transition-colors">
+                Subscribe Free →
+              </button>
+            </div>
+
+            {/* ── Banner 300x250 Ad in sidebar ── */}
+            <div className="bg-surface border border-border-dark rounded-xl overflow-hidden">
+              <p className="text-xs text-text-muted text-right px-2 pt-1">Sponsored</p>
+              <Banner300x250 />
             </div>
 
             {/* Popular posts */}
@@ -180,6 +206,12 @@ export default function HomePage() {
                 </ol>
               </div>
             )}
+
+            {/* ── Second Banner 300x250 below popular posts ── */}
+            <div className="bg-surface border border-border-dark rounded-xl overflow-hidden">
+              <p className="text-xs text-text-muted text-right px-2 pt-1">Sponsored</p>
+              <Banner300x250 />
+            </div>
 
             {/* Categories */}
             <div className="bg-surface border border-border-dark rounded-xl p-5">

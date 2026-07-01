@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import useAuthStore from './lib/authStore'
+import SocialBar from './components/ads/SocialBar'
 
 // Public pages
 import HomePage from './pages/public/HomePage'
@@ -31,7 +32,6 @@ import AdminNews from './pages/admin/AdminNews'
 import AdminSeries from './pages/admin/AdminSeries'
 import AdminMedia from './pages/admin/AdminMedia'
 
-// Auth guard
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />
@@ -46,40 +46,45 @@ export default function App() {
   }, [])
 
   return (
-    <Routes>
-      {/* Public */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/post/:slug" element={<PostPage />} />
-      <Route path="/category/:slug" element={<CategoryPage />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/tools" element={<ToolsPage />} />
-      <Route path="/ai-news" element={<AiNewsPage />} />
-      <Route path="/series" element={<SeriesPage />} />
-      <Route path="/series/:slug" element={<SeriesDetailPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/advertise" element={<AdvertisePage />} />
+    <>
+      {/* Social Bar loads once globally — floats over all public pages */}
+      <SocialBar />
 
-      {/* Admin auth */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/post/:slug" element={<PostPage />} />
+        <Route path="/category/:slug" element={<CategoryPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/tools" element={<ToolsPage />} />
+        <Route path="/ai-news" element={<AiNewsPage />} />
+        <Route path="/series" element={<SeriesPage />} />
+        <Route path="/series/:slug" element={<SeriesDetailPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/advertise" element={<AdvertisePage />} />
 
-      {/* Admin protected */}
-      <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="posts" element={<AdminPosts />} />
-        <Route path="posts/new" element={<AdminPostEditor />} />
-        <Route path="posts/edit/:id" element={<AdminPostEditor />} />
-        <Route path="categories" element={<AdminCategories />} />
-        <Route path="comments" element={<AdminComments />} />
-        <Route path="subscribers" element={<AdminSubscribers />} />
-        <Route path="tools" element={<AdminTools />} />
-        <Route path="news" element={<AdminNews />} />
-        <Route path="series" element={<AdminSeries />} />
-        <Route path="media" element={<AdminMedia />} />
-      </Route>
+        {/* Admin auth */}
+        <Route path="/admin/login" element={<AdminLogin />} />
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* Admin protected */}
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="posts" element={<AdminPosts />} />
+          <Route path="posts/new" element={<AdminPostEditor />} />
+          <Route path="posts/edit/:id" element={<AdminPostEditor />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="comments" element={<AdminComments />} />
+          <Route path="subscribers" element={<AdminSubscribers />} />
+          <Route path="tools" element={<AdminTools />} />
+          <Route path="news" element={<AdminNews />} />
+          <Route path="series" element={<AdminSeries />} />
+          <Route path="media" element={<AdminMedia />} />
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   )
 }
