@@ -8,24 +8,11 @@ import NativeBanner from '../../components/ads/NativeBanner'
 import Banner300x250 from '../../components/ads/Banner300x250'
 import api from '../../lib/api'
 
-const CATEGORIES = [
-  { name: 'All', slug: '' },
-  { name: 'Artificial Intelligence', slug: 'artificial-intelligence' },
-  { name: 'Machine Learning', slug: 'machine-learning' },
-  { name: 'Developer Tools', slug: 'developer-tools' },
-  { name: 'Startups & Funding', slug: 'startups-funding' },
-  { name: 'Cybersecurity', slug: 'cybersecurity' },
-  { name: 'Web3 & Blockchain', slug: 'web3-blockchain' },
-  { name: 'Big Tech', slug: 'big-tech' },
-  { name: 'Gadgets & Hardware', slug: 'gadgets-hardware' },
-  { name: 'Open Source', slug: 'open-source' },
-  { name: 'Tutorials & How-Tos', slug: 'tutorials' },
-]
-
 export default function HomePage() {
   const [featured, setFeatured] = useState(null)
   const [trending, setTrending] = useState([])
   const [posts, setPosts] = useState([])
+  const [categories, setCategories] = useState([])
   const [activeCategory, setActiveCategory] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -34,6 +21,8 @@ export default function HomePage() {
   useEffect(() => {
     api.get('/posts/featured').then(r => setFeatured(r.data.post)).catch(() => {})
     api.get('/posts/trending').then(r => setTrending(r.data.posts)).catch(() => {})
+    // Fetch real categories from DB
+    api.get('/categories').then(r => setCategories(r.data.categories || [])).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -99,10 +88,18 @@ export default function HomePage() {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Main posts */}
           <div className="flex-1 min-w-0">
-            {/* Category filter */}
+            {/* Category filter — real categories from DB */}
             <div className="flex items-center gap-2 flex-wrap mb-6">
-              {CATEGORIES.map(cat => (
-                <button key={cat.slug} onClick={() => handleCategory(cat.slug)}
+              <button onClick={() => handleCategory('')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                  activeCategory === ''
+                    ? 'bg-accent text-white'
+                    : 'bg-surface text-text-muted hover:text-text-main border border-border-dark'
+                }`}>
+                All
+              </button>
+              {categories.filter(c => c.isActive).map(cat => (
+                <button key={cat._id} onClick={() => handleCategory(cat.slug)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                     activeCategory === cat.slug
                       ? 'bg-accent text-white'
@@ -213,12 +210,12 @@ export default function HomePage() {
               <Banner300x250 />
             </div>
 
-            {/* Categories */}
+            {/* Categories sidebar — real from DB */}
             <div className="bg-surface border border-border-dark rounded-xl p-5">
               <h3 className="font-display font-semibold text-text-main text-sm mb-4">🗂 Browse Categories</h3>
               <div className="flex flex-wrap gap-2">
-                {CATEGORIES.slice(1).map(cat => (
-                  <button key={cat.slug} onClick={() => handleCategory(cat.slug)}
+                {categories.filter(c => c.isActive).map(cat => (
+                  <button key={cat._id} onClick={() => handleCategory(cat.slug)}
                     className="text-xs px-2.5 py-1 bg-primary border border-border-dark rounded-full text-text-muted hover:text-accent hover:border-accent transition-colors">
                     {cat.name}
                   </button>

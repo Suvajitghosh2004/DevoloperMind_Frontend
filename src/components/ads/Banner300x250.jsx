@@ -1,45 +1,48 @@
 import { useEffect, useRef } from 'react'
 
 export default function Banner300x250() {
-  const ref = useRef(null)
-  const loaded = useRef(false)
+  const iframeRef = useRef(null)
 
   useEffect(() => {
-    if (loaded.current || !ref.current) return
-    loaded.current = true
+    if (!iframeRef.current) return
 
-    ref.current.innerHTML = ''
+    const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document
+    if (!doc) return
 
-    // Set atOptions before loading the script
-    const optionsScript = document.createElement('script')
-    optionsScript.innerHTML = `
-      window.atOptions = {
-        'key': 'e25f6794d41800cabf54897f31909493',
-        'format': 'iframe',
-        'height': 250,
-        'width': 300,
-        'params': {}
-      };
-    `
-    ref.current.appendChild(optionsScript)
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; display: flex; justify-content: center; align-items: center; width: 300px; height: 250px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <script>
+    window.atOptions = {
+      'key': 'e25f6794d41800cabf54897f31909493',
+      'format': 'iframe',
+      'height': 250,
+      'width': 300,
+      'params': {}
+    };
+  <\/script>
+  <script src="https://www.highperformanceformat.com/e25f6794d41800cabf54897f31909493/invoke.js"><\/script>
+</body>
+</html>`
 
-    const invokeScript = document.createElement('script')
-    invokeScript.src = 'https://www.highperformanceformat.com/e25f6794d41800cabf54897f31909493/invoke.js'
-    invokeScript.async = true
-    ref.current.appendChild(invokeScript)
-
-    return () => {
-      if (ref.current) ref.current.innerHTML = ''
-      loaded.current = false
-    }
+    doc.open()
+    doc.write(html)
+    doc.close()
   }, [])
 
   return (
-    <div className="flex justify-center my-4">
-      <div
-        ref={ref}
-        style={{ width: '300px', minHeight: '250px' }}
-        className="overflow-hidden"
+    <div className="flex justify-center my-2">
+      <iframe
+        ref={iframeRef}
+        style={{ width: '300px', height: '250px', border: 'none', display: 'block' }}
+        scrolling="no"
+        title="Advertisement"
       />
     </div>
   )
