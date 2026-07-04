@@ -257,7 +257,11 @@ export default function PostPage() {
             {!contentAfter && (
               <div className="prose-dark" dangerouslySetInnerHTML={{ __html: cleanedContent }} />
             )}
-
+{/* ── End of post Native Banner Ad ── */}
+<div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
+  <AdLabel />
+  <NativeBanner />
+</div>
             {/* Share */}
             <div className="flex items-center gap-3 mt-10 pt-6 border-t border-border-dark">
               <span className="text-sm text-text-muted font-medium">Share:</span>
@@ -354,6 +358,11 @@ export default function PostPage() {
                   ))}
                 </div>
               )}
+              {/* ── End of post Native Banner Ad ── */}
+<div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
+  <AdLabel />
+  <NativeBanner />
+</div>
             </section>
           </article>
 
