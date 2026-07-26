@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import useAuthStore from './lib/authStore'
 import SocialBar from './components/ads/SocialBar'
 
@@ -49,6 +50,7 @@ export default function App() {
     <>
       {/* Social Bar loads once globally — floats over all public pages */}
       <SocialBar />
+      <Analytics />
 
       <Routes>
         {/* Public */}
