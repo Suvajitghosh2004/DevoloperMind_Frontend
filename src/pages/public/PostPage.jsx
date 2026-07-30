@@ -13,17 +13,16 @@ import Banner300x250 from '../../components/ads/Banner300x250'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://developermind.vercel.app'
+
 function cleanPostContent(html, postTitle) {
   if (!html) return html
-
   const titleEscaped = postTitle?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') || ''
   if (titleEscaped) {
     html = html.replace(
-      new RegExp(`^\\s*<h[12][^>]*>\\s*${titleEscaped}\\s*</h[12]>\\s*`, 'i'),
-      ''
+      new RegExp(`^\\s*<h[12][^>]*>\\s*${titleEscaped}\\s*</h[12]>\\s*`, 'i'), ''
     )
   }
-
   html = html.replace(
     /(<img[^>]*>)\s*(<p(?:[^>]*)>)([^<]{1,40})(<\/p>)/g,
     (match, img, pOpen, text, pClose) => {
@@ -35,19 +34,14 @@ function cleanPostContent(html, postTitle) {
       return match
     }
   )
-
   return html
 }
 
-// Split HTML content at roughly the Nth paragraph for mid-article ad insertion
 function splitContentAtParagraph(html, n = 3) {
   if (!html) return { before: '', after: '' }
   const parts = html.split(/(?<=<\/p>|<\/h[2-4]>|<\/ul>|<\/ol>)/)
   if (parts.length <= n) return { before: html, after: '' }
-  return {
-    before: parts.slice(0, n).join(''),
-    after: parts.slice(n).join('')
-  }
+  return { before: parts.slice(0, n).join(''), after: parts.slice(n).join('') }
 }
 
 const AdLabel = () => (
@@ -139,8 +133,14 @@ export default function PostPage() {
   )
 
   const cleanedContent = cleanPostContent(post.content, post.title)
-  // Split after 3rd block for mid-article ad
   const { before: contentBefore, after: contentAfter } = splitContentAtParagraph(cleanedContent, 3)
+
+  // Rich SEO data
+  const breadcrumbs = [
+    { name: 'Home', url: SITE_URL },
+    post.category && { name: post.category.name, url: `${SITE_URL}/category/${post.category.slug}` },
+    { name: post.title, url: `${SITE_URL}/post/${post.slug}` },
+  ].filter(Boolean)
 
   return (
     <PublicLayout>
@@ -149,19 +149,21 @@ export default function PostPage() {
         title={post.metaTitle || post.title}
         description={post.metaDescription || post.excerpt}
         ogImage={post.ogImage || post.thumbnail}
-        canonicalUrl={post.canonicalUrl}
+        canonicalUrl={post.canonicalUrl || `${SITE_URL}/post/${post.slug}`}
         type="article"
         article={{
           publishedAt: post.createdAt,
           updatedAt: post.updatedAt,
-          authorName: post.author?.name
+          authorName: post.author?.name,
+          tags: post.tags,
+          categoryName: post.category?.name,
         }}
+        breadcrumbs={breadcrumbs}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-12">
 
-          {/* Article */}
           <article className="flex-1 min-w-0" style={{ maxWidth: '720px' }}>
 
             {/* Breadcrumb */}
@@ -226,7 +228,7 @@ export default function PostPage() {
               <img src={post.thumbnail} alt={post.title}
                 className="w-full rounded-2xl mb-8 object-cover"
                 style={{ maxHeight: '420px' }}
-                loading="lazy"
+                loading="eager"
               />
             )}
 
@@ -235,12 +237,12 @@ export default function PostPage() {
               <SeriesBanner series={post.series} posts={seriesPosts} currentPostId={post._id} />
             )}
 
-            {/* ── Article content — BEFORE mid-article ad ── */}
+            {/* Content before mid-article ad */}
             {contentBefore && (
               <div className="prose-dark" dangerouslySetInnerHTML={{ __html: contentBefore }} />
             )}
 
-            {/* ── Mid-article Ad — Native Banner after intro paragraphs ── */}
+            {/* Mid-article ad */}
             {contentAfter && (
               <div className="my-8 rounded-xl overflow-hidden border border-border-dark/30">
                 <AdLabel />
@@ -248,22 +250,29 @@ export default function PostPage() {
               </div>
             )}
 
-            {/* ── Article content — AFTER mid-article ad ── */}
+            {/* Content after mid-article ad */}
             {contentAfter && (
               <div className="prose-dark" dangerouslySetInnerHTML={{ __html: contentAfter }} />
             )}
 
-            {/* If content wasn't split (short post), render it all */}
+            {/* Short post - full content */}
             {!contentAfter && (
               <div className="prose-dark" dangerouslySetInnerHTML={{ __html: cleanedContent }} />
             )}
-{/* ── End of post Native Banner Ad ── */}
-<div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
-  <AdLabel />
-  <NativeBanner />
-</div>
+
+            {/* Tags */}
+            {post.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border-dark">
+                {post.tags.map(tag => (
+                  <span key={tag} className="text-xs px-2.5 py-1 bg-surface border border-border-dark rounded-full text-text-muted">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Share */}
-            <div className="flex items-center gap-3 mt-10 pt-6 border-t border-border-dark">
+            <div className="flex items-center gap-3 mt-6">
               <span className="text-sm text-text-muted font-medium">Share:</span>
               {shareLinks.map(link => (
                 <a key={link.name} href={link.href} target="_blank" rel="noopener noreferrer"
@@ -291,7 +300,6 @@ export default function PostPage() {
               </div>
             )}
 
-            {/* Newsletter */}
             <NewsletterBanner variant="inline" />
 
             {/* Related posts */}
@@ -304,7 +312,7 @@ export default function PostPage() {
               </section>
             )}
 
-            {/* ── Pre-comments Banner Ad ── */}
+            {/* Pre-comments ad */}
             <div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
               <AdLabel />
               <NativeBanner />
@@ -358,23 +366,22 @@ export default function PostPage() {
                   ))}
                 </div>
               )}
-              {/* ── End of post Native Banner Ad ── */}
-<div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
-  <AdLabel />
-  <NativeBanner />
-</div>
             </section>
+
+            {/* End of post ad */}
+            <div className="mt-10 rounded-xl overflow-hidden border border-border-dark/30">
+              <AdLabel />
+              <NativeBanner />
+            </div>
+
           </article>
 
-          {/* Sticky sidebar — TOC + Banner ad */}
+          {/* Sticky sidebar */}
           <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
             <div className="sticky top-24 space-y-6">
-              {/* TOC */}
               {post.tableOfContents?.length > 0 && (
                 <TableOfContents items={post.tableOfContents} />
               )}
-
-              {/* ── Sidebar Banner 300x250 Ad ── */}
               <div className="bg-surface border border-border-dark rounded-xl overflow-hidden">
                 <AdLabel />
                 <Banner300x250 />
