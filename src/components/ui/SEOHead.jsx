@@ -140,6 +140,7 @@ export default function SEOHead({
       {articleSchema && <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>}
       {breadcrumbSchema && <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>}
       {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
+      <meta name="google-site-verification" content="dc1f25da0d9c302d" />
     </Helmet>
   )
 }
