@@ -2,7 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-# Sitemap — served by the backend
-Sitemap: https://developermind-api.onrender.com/sitemap.xml
+Sitemap: https://devolopermind.vercel.app/sitemap.xml
 
 Crawl-delay: 10

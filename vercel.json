@@ -1,5 +1,20 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://devolopermind-backend.onrender.com/sitemap.xml"
+    },
+    {
+      "source": "/rss.xml",
+      "destination": "https://devolopermind-backend.onrender.com/rss.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://devolopermind-backend.onrender.com/robots.txt"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
