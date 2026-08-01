@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async'
 
 const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'DeveloperMind'
-const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://developermind.vercel.app'
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://devolopermind.vercel.app'
 const SITE_DESC = 'AI, developer tools, startups, cybersecurity and the tech shaping tomorrow. Written for builders, by builders.'
 const TWITTER_HANDLE = '@developermind'
 
