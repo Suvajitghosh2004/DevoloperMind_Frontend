@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import PublicLayout from '../../components/layout/PublicLayout'
 import SEOHead from '../../components/ui/SEOHead'
 import PostCard from '../../components/blog/PostCard'
@@ -13,17 +13,53 @@ export default function CategoryPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    api.get(`/categories/${slug}`).then(r => setCategory(r.data.category)).catch(() => {})
-  }, [slug])
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setNotFound(false)
+    api.get(`/categories/${slug}`)
+      .then(r => setCategory(r.data.category))
+      .catch(() => setNotFound(true))
+  }, [slug])
+
+  useEffect(() => {
+    if (notFound) return
+    setLoading(true)
     api.get('/posts', { params: { category: slug, page, limit: 12 } })
-      .then(r => { setPosts(r.data.posts); setTotalPages(r.data.pages); setTotal(r.data.total) })
+      .then(r => {
+        setPosts(r.data.posts)
+        setTotalPages(r.data.pages)
+        setTotal(r.data.total)
+      })
       .finally(() => setLoading(false))
-  }, [slug, page])
+  }, [slug, page, notFound])
+
+  // Show 404 if category doesn't exist or is inactive
+  if (notFound) return (
+    <PublicLayout>
+      <SEOHead title="Category Not Found" noindex={true} />
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <p className="text-5xl mb-4">🗂</p>
+        <h1 className="font-display font-bold text-3xl text-text-main mb-4">
+          Category Not Found
+        </h1>
+        <p className="text-text-muted mb-8">
+          This category doesn't exist or has been removed.
+        </p>
+        <div className="flex items-center justify-center gap-4">
+          <Link to="/"
+            className="bg-accent hover:bg-accent/80 text-white px-6 py-3 rounded-xl font-medium transition-colors">
+            ← Back to Home
+          </Link>
+          <Link to="/search"
+            className="bg-surface border border-border-dark hover:border-accent text-text-muted hover:text-text-main px-6 py-3 rounded-xl font-medium transition-colors">
+            Search Articles
+          </Link>
+        </div>
+      </div>
+    </PublicLayout>
+  )
 
   return (
     <PublicLayout>
@@ -36,7 +72,8 @@ export default function CategoryPage() {
         {/* Hero */}
         <div className="mb-10 pb-8 border-b border-border-dark">
           <div className="flex items-center gap-3 mb-3">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: category?.color || '#6366F1' }} />
+            <span className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: category?.color || '#6366F1' }} />
             <span className="text-xs text-text-muted uppercase tracking-wider">Category</span>
           </div>
           <h1 className="font-display font-bold text-3xl md:text-4xl text-text-main mb-3">
@@ -45,7 +82,9 @@ export default function CategoryPage() {
           {category?.description && (
             <p className="text-text-muted text-lg max-w-2xl">{category.description}</p>
           )}
-          <p className="text-text-muted text-sm mt-3">{total} article{total !== 1 ? 's' : ''}</p>
+          <p className="text-text-muted text-sm mt-3">
+            {total} article{total !== 1 ? 's' : ''}
+          </p>
         </div>
 
         {/* Grid */}
@@ -66,6 +105,7 @@ export default function CategoryPage() {
           </div>
         )}
 
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-10">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}

@@ -1,11 +1,18 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    api.get('/categories')
+      .then(r => setCategories(r.data.categories || []))
+      .catch(() => {})
+  }, [])
 
   const handleSubscribe = async (e) => {
     e.preventDefault()
@@ -58,26 +65,39 @@ export default function Footer() {
             <p className="text-text-muted text-xs mt-2">Every Tuesday. No spam. Unsubscribe anytime.</p>
           </div>
 
-          {/* Links */}
+          {/* Dynamic categories from DB */}
           <div>
             <h4 className="font-display font-semibold text-text-main text-sm mb-4">Categories</h4>
             <ul className="space-y-2">
-              {['Artificial Intelligence','Machine Learning','Developer Tools','Cybersecurity','Web3 & Blockchain'].map(cat => (
-                <li key={cat}>
-                  <Link to={`/category/${cat.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}`} className="text-text-muted hover:text-accent text-sm transition-colors">
-                    {cat}
+              {categories.filter(c => c.isActive).map(cat => (
+                <li key={cat._id}>
+                  <Link
+                    to={`/category/${cat.slug}`}
+                    className="text-text-muted hover:text-accent text-sm transition-colors"
+                  >
+                    {cat.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Company links */}
           <div>
             <h4 className="font-display font-semibold text-text-main text-sm mb-4">Company</h4>
             <ul className="space-y-2">
-              {[{label:'About',to:'/about'},{label:'Contact',to:'/contact'},{label:'Advertise',to:'/advertise'},{label:'Privacy Policy',to:'/privacy'},{label:'AI News Feed',to:'/ai-news'},{label:'Tools Directory',to:'/tools'}].map(link => (
+              {[
+                { label: 'About', to: '/about' },
+                { label: 'Contact', to: '/contact' },
+                { label: 'Advertise', to: '/advertise' },
+                { label: 'Privacy Policy', to: '/privacy' },
+                { label: 'AI News Feed', to: '/ai-news' },
+                { label: 'Tools Directory', to: '/tools' },
+              ].map(link => (
                 <li key={link.to}>
-                  <Link to={link.to} className="text-text-muted hover:text-accent text-sm transition-colors">{link.label}</Link>
+                  <Link to={link.to} className="text-text-muted hover:text-accent text-sm transition-colors">
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
